@@ -5,6 +5,32 @@ It monitors the **temperature, humidity, and fill level** of a trash bin, and se
 
 ---
 
+## 🚀 Setup Instructions
+
+### 1. Credentials Configuration
+1. Copy `secrets_template.h` to `secrets.h`
+2. Edit `secrets.h` with your actual credentials:
+   ```cpp
+   #define WIFI_SSID "your_wifi_name"
+   #define WIFI_PASSWORD "your_wifi_password"
+   #define BLYNK_TEMPLATE_ID "your_template_id"
+   #define BLYNK_TEMPLATE_NAME "your_template_name"
+   #define BLYNK_AUTH_TOKEN "your_auth_token"
+   ```
+
+### 2. Hardware Setup
+- **DHT11**: Pin 4
+- **HC-SR04 Trigger**: Pin 5  
+- **HC-SR04 Echo**: Pin 18
+- **Trash bin height**: 13.5cm (when empty)
+
+### 3. Upload to ESP32
+1. Open `code.ino` in Arduino IDE
+2. Make sure `secrets.h` is properly configured
+3. Upload to your ESP32
+
+---
+
 ## ✨ Features
 - Measure **temperature** and **humidity** using DHT11 sensor  
 - Detect **trash fill level** using HC-SR04 ultrasonic sensor  

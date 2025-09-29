@@ -1,6 +1,4 @@
-#define BLYNK_TEMPLATE_ID "TMPL6FXY657B-"
-#define BLYNK_TEMPLATE_NAME "DHT11 and HCSR04"
-#define BLYNK_AUTH_TOKEN "iWNtJsbGXuFaAWP0-qfO4X8tPcnw_ROF"
+#include "secrets.h"
 
 #include <WiFi.h>
 #include <BlynkSimpleEsp32.h>
@@ -17,9 +15,6 @@
 #define MIN_TRASH_DISTANCE 2.0 // Minimum distance when full (cm)
 
 DHT dht(DHTPIN, DHTTYPE);
-
-const char* SSID = "AyamGulai";
-const char* PASSWORD = "ayamgoreng";
 
 BlynkTimer timer;
 int dataTimerID; // Store timer ID
@@ -150,7 +145,7 @@ void setup() {
   Serial.println("🔧 Sensors initialized");
   
   // Connect to WiFi & Blynk
-  Blynk.begin(BLYNK_AUTH_TOKEN, SSID, PASSWORD);
+  Blynk.begin(BLYNK_AUTH_TOKEN, WIFI_SSID, WIFI_PASSWORD);
   
   Serial.println("📶 WiFi Connected: " + WiFi.localIP().toString());
   Serial.println("📱 Blynk Connected!");

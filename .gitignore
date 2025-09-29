@@ -1,0 +1,22 @@
+# Sensitive files
+secrets.h
+
+# Arduino IDE files
+*.hex
+*.elf
+*.map
+*.bin
+
+# System files
+.DS_Store
+Thumbs.db
+*~
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
