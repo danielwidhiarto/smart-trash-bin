@@ -1,65 +1,336 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import {
+  getCurrentData,
+  getHistoryData,
+  TrashData,
+  HistoryData,
+} from "@/lib/firebase";
+import {
+  Trash2,
+  Thermometer,
+  Droplets,
+  TrendingUp,
+  Activity,
+  AlertCircle,
+  History,
+} from "lucide-react";
+import Link from "next/link";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 
 export default function Home() {
+  const [data, setData] = useState<TrashData | null>(null);
+  const [history, setHistory] = useState<HistoryData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribeCurrent = getCurrentData((newData) => {
+      setData(newData);
+      setLoading(false);
+    });
+
+    const unsubscribeHistory = getHistoryData((historyData) => {
+      setHistory(historyData.slice(0, 50)); // Last 50 data points (newest first)
+    });
+
+    return () => {
+      unsubscribeCurrent();
+      unsubscribeHistory();
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-white text-xl">Loading Dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "FULL":
+        return "bg-red-500";
+      case "HIGH":
+        return "bg-orange-500";
+      case "MEDIUM":
+        return "bg-yellow-500";
+      case "LOW":
+        return "bg-green-500";
+      case "EMPTY":
+        return "bg-blue-500";
+      case "LID OPEN":
+        return "bg-purple-500";
+      default:
+        return "bg-gray-500";
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    if (status === "FULL" || status === "HIGH") {
+      return <AlertCircle className="text-white" size={20} />;
+    }
+    return null;
+  };
+
+  const chartData = history
+    .slice(0, 30)
+    .reverse()
+    .map((item, index) => ({
+      name: item.dateTime?.substring(11, 16) || `#${index}`, // Show time HH:MM
+      fill: item.fillPercent ?? 0,
+      temp: item.temp ?? 0,
+      humidity: item.humidity ?? 0,
+    }));
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <main className="container mx-auto p-4 md:p-8">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <Trash2 className="text-blue-400" size={40} />
+              <h1 className="text-3xl md:text-4xl font-bold text-white">
+                Smart Trash Bin Dashboard
+              </h1>
+            </div>
+            <p className="text-gray-400">
+              Real-time monitoring & analytics powered by IoT
+            </p>
+          </div>
+          <Link
+            href="/history"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-all"
+          >
+            <History size={20} />
+            <span className="hidden md:inline">View History</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Status Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+        {/* Fill Level Card */}
+        <div className="bg-slate-800 rounded-xl p-6 shadow-xl border border-slate-700 hover:border-blue-500 transition-all">
+          <div className="flex items-center justify-between mb-4">
+            <Trash2 className="text-blue-400" size={32} />
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-bold text-white flex items-center gap-1 ${getStatusColor(
+                data?.status || ""
+              )}`}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+              {getStatusIcon(data?.status || "")}
+              {data?.status || "N/A"}
+            </span>
+          </div>
+          <h3 className="text-gray-400 text-sm mb-2">Fill Level</h3>
+          <p className="text-3xl font-bold text-white mb-2">
+            {data?.fillPercent?.toFixed(1) || 0}%
+          </p>
+          <div className="w-full bg-slate-700 rounded-full h-3">
+            <div
+              className={`h-3 rounded-full transition-all duration-500 ${getStatusColor(
+                data?.status || ""
+              )}`}
+              style={{ width: `${Math.min(data?.fillPercent || 0, 100)}%` }}
+            ></div>
+          </div>
+        </div>
+
+        {/* Temperature Card */}
+        <div className="bg-slate-800 rounded-xl p-6 shadow-xl border border-slate-700 hover:border-red-500 transition-all">
+          <div className="flex items-center justify-between mb-4">
+            <Thermometer className="text-red-400" size={32} />
+          </div>
+          <h3 className="text-gray-400 text-sm mb-2">Temperature</h3>
+          <p className="text-3xl font-bold text-white">
+            {data?.temperature?.toFixed(1) || 0}°C
+          </p>
+          <p className="text-gray-500 text-sm mt-2">
+            {data?.temperature && data.temperature > 30
+              ? "🔥 High"
+              : "✅ Normal"}
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Humidity Card */}
+        <div className="bg-slate-800 rounded-xl p-6 shadow-xl border border-slate-700 hover:border-blue-500 transition-all">
+          <div className="flex items-center justify-between mb-4">
+            <Droplets className="text-blue-400" size={32} />
+          </div>
+          <h3 className="text-gray-400 text-sm mb-2">Humidity</h3>
+          <p className="text-3xl font-bold text-white">
+            {data?.humidity?.toFixed(1) || 0}%
+          </p>
+          <p className="text-gray-500 text-sm mt-2">
+            {data?.humidity && data.humidity > 70 ? "💧 High" : "✅ Normal"}
+          </p>
         </div>
-      </main>
-    </div>
+
+        {/* Distance Card */}
+        <div className="bg-slate-800 rounded-xl p-6 shadow-xl border border-slate-700 hover:border-green-500 transition-all">
+          <div className="flex items-center justify-between mb-4">
+            <TrendingUp className="text-green-400" size={32} />
+          </div>
+          <h3 className="text-gray-400 text-sm mb-2">Distance to Trash</h3>
+          <p className="text-3xl font-bold text-white">
+            {data?.distance?.toFixed(2) || 0} cm
+          </p>
+          <p className="text-gray-500 text-sm mt-2">Max: 13.5 cm (empty)</p>
+        </div>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Fill Level History Chart */}
+        <div className="bg-slate-800 rounded-xl p-6 shadow-xl border border-slate-700">
+          <div className="flex items-center gap-2 mb-4">
+            <Activity className="text-blue-400" size={24} />
+            <h2 className="text-xl font-bold text-white">Fill Level History</h2>
+          </div>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+              <XAxis dataKey="name" stroke="#9ca3af" />
+              <YAxis stroke="#9ca3af" />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#1e293b",
+                  border: "1px solid #475569",
+                }}
+                labelStyle={{ color: "#fff" }}
+              />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="fill"
+                stroke="#3b82f6"
+                strokeWidth={2}
+                name="Fill Level (%)"
+                dot={{ fill: "#3b82f6" }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Temperature & Humidity Chart */}
+        <div className="bg-slate-800 rounded-xl p-6 shadow-xl border border-slate-700">
+          <div className="flex items-center gap-2 mb-4">
+            <Thermometer className="text-red-400" size={24} />
+            <h2 className="text-xl font-bold text-white">
+              Temperature & Humidity
+            </h2>
+          </div>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+              <XAxis dataKey="name" stroke="#9ca3af" />
+              <YAxis stroke="#9ca3af" />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "#1e293b",
+                  border: "1px solid #475569",
+                }}
+                labelStyle={{ color: "#fff" }}
+              />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="temp"
+                stroke="#ef4444"
+                strokeWidth={2}
+                name="Temperature (°C)"
+                dot={{ fill: "#ef4444" }}
+              />
+              <Line
+                type="monotone"
+                dataKey="humidity"
+                stroke="#3b82f6"
+                strokeWidth={2}
+                name="Humidity (%)"
+                dot={{ fill: "#3b82f6" }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Live Status & Info */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Live Status */}
+        <div className="bg-slate-800 rounded-xl p-6 shadow-xl border border-slate-700">
+          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <Activity className="text-green-400" size={24} />
+            Live Status
+          </h2>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Last Update:</span>
+              <span className="text-white font-semibold">
+                {data?.dateTime || "N/A"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Connection:</span>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-green-400 font-semibold">Live</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Data Points:</span>
+              <span className="text-white font-semibold">{history.length}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* System Info */}
+        <div className="bg-slate-800 rounded-xl p-6 shadow-xl border border-slate-700">
+          <h2 className="text-xl font-bold text-white mb-4">System Info</h2>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Device:</span>
+              <span className="text-white font-semibold">ESP32 + Sensors</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Sensors:</span>
+              <span className="text-white font-semibold">DHT11 + HC-SR04</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Cloud:</span>
+              <span className="text-white font-semibold">
+                Firebase Realtime DB
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Update Interval:</span>
+              <span className="text-white font-semibold">10 seconds</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="mt-8 text-center text-gray-500 text-sm">
+        <p>
+          Smart Trash Bin Dashboard v1.0 | IoT Assignment 2 | Powered by Next.js
+          & Firebase
+        </p>
+      </div>
+    </main>
   );
 }
