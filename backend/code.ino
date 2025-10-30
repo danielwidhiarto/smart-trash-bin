@@ -1,16 +1,3 @@
-// Blynk Template Info (WAJIB untuk Blynk IoT v2.0)
-#define BLYNK_TEMPLATE_ID "TMPL6abc123xyz"  // ❗ GANTI ini dari Blynk Console
-#define BLYNK_TEMPLATE_NAME "Smart Trash Bin"
-#define BLYNK_AUTH_TOKEN "r0YgOcwtRU49Do0lQmX0XJVV0boYIa8b"
-
-// WiFi credentials
-#define WIFI_SSID "AyamGulai"
-#define WIFI_PASSWORD "ayamgoreng"
-
-// Firebase - FIX: Ganti host sesuai region Asia Southeast
-#define FIREBASE_HOST "smart-trash-bin-6eee9-default-rtdb.asia-southeast1.firebasedatabase.app"
-#define FIREBASE_AUTH "v71o4vSy0c2zjYMeRSh29lH2aQsEiqZV2nC4nzFJ"
-
 #include <WiFi.h>
 #include <BlynkSimpleEsp32.h>
 #include <FirebaseESP32.h>

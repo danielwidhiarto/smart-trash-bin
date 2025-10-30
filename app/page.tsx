@@ -17,6 +17,7 @@ import {
   History,
 } from "lucide-react";
 import Link from "next/link";
+import PredictionCard from "@/components/PredictionCard";
 import {
   LineChart,
   Line,
@@ -267,6 +268,11 @@ export default function Home() {
             </LineChart>
           </ResponsiveContainer>
         </div>
+      </div>
+
+      {/* ML Prediction Section */}
+      <div className="mb-8">
+        <PredictionCard history={history} />
       </div>
 
       {/* Live Status & Info */}
