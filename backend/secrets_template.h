@@ -1,13 +1,15 @@
 #ifndef SECRETS_H
 #define SECRETS_H
 
-// WiFi Configuration
-#define WIFI_SSID "YOUR_WIFI_NAME"
-#define WIFI_PASSWORD "YOUR_WIFI_PASSWORD"
+// WiFi credentials
+#define WIFI_SSID "your_wifi_ssid"
+#define WIFI_PASSWORD "your_wifi_password"
 
-// Blynk Configuration
-#define BLYNK_TEMPLATE_ID "YOUR_TEMPLATE_ID"
-#define BLYNK_TEMPLATE_NAME "YOUR_TEMPLATE_NAME"
-#define BLYNK_AUTH_TOKEN "YOUR_AUTH_TOKEN"
+// Blynk
+#define BLYNK_AUTH_TOKEN "your_blynk_token"
+
+// Firebase
+#define FIREBASE_HOST "your-project.firebaseio.com"
+#define FIREBASE_AUTH "your_firebase_database_secret"
 
 #endif
