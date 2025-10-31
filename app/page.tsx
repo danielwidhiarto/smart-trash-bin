@@ -33,11 +33,23 @@ export default function Home() {
   const [data, setData] = useState<TrashData | null>(null);
   const [history, setHistory] = useState<HistoryData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAlert, setShowAlert] = useState(false);
+  const [prevStatus, setPrevStatus] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribeCurrent = getCurrentData((newData) => {
       setData(newData);
       setLoading(false);
+
+      // Show alert when status changes to FULL or HIGH
+      if (newData?.status && prevStatus !== newData.status) {
+        if (newData.status === "FULL" || newData.status === "HIGH") {
+          setShowAlert(true);
+          // Auto hide after 10 seconds
+          setTimeout(() => setShowAlert(false), 10000);
+        }
+        setPrevStatus(newData.status);
+      }
     });
 
     const unsubscribeHistory = getHistoryData((historyData) => {
@@ -48,7 +60,7 @@ export default function Home() {
       unsubscribeCurrent();
       unsubscribeHistory();
     };
-  }, []);
+  }, [prevStatus]);
 
   if (loading) {
     return (
@@ -339,6 +351,49 @@ export default function Home() {
           & Firebase
         </p>
       </div>
+
+      {/* Toast Notification - Bottom Right Alert */}
+      {showAlert && (
+        <div className="fixed bottom-6 right-6 z-50 animate-slide-up">
+          <div className="bg-linear-to-r from-red-600 to-orange-600 text-white px-6 py-4 rounded-lg shadow-2xl border-2 border-red-400 max-w-sm">
+            <div className="flex items-start gap-3">
+              <div className="shrink-0">
+                <AlertCircle className="w-6 h-6 animate-pulse" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-bold text-lg mb-1">
+                  {data?.status === "FULL"
+                    ? "🗑️ Trash is Full!"
+                    : "⚠️ Trash Almost Full!"}
+                </h4>
+                <p className="text-sm text-red-100">
+                  {data?.status === "FULL"
+                    ? "Please empty the trash bin immediately! (100%)"
+                    : `Trash level is at ${data?.fillPercent?.toFixed(
+                        1
+                      )}%. Please empty soon.`}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAlert(false)}
+                className="shrink-0 text-white hover:text-red-200 transition-colors"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
