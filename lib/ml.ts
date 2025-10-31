@@ -23,8 +23,11 @@ export function predictFillLevel(historyData: HistoryData[]): PredictionResult {
   }
 
   // Sort by time (oldest first) - Use last 100 data points for better accuracy
+  // Filter out "LID OPEN" status to avoid skewing predictions
   const sorted = [...historyData]
-    .filter((d) => d.fillPercent != null && d.dateTime)
+    .filter(
+      (d) => d.fillPercent != null && d.dateTime && d.status !== "LID OPEN"
+    )
     .sort(
       (a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime()
     )
@@ -114,7 +117,12 @@ export function analyzeTimePattern(historyData: HistoryData[]): {
   const hourlyData: { [hour: number]: number[] } = {};
 
   historyData.forEach((item) => {
-    if (!item.dateTime || item.fillPercent == null) return;
+    if (
+      !item.dateTime ||
+      item.fillPercent == null ||
+      item.status === "LID OPEN"
+    )
+      return;
 
     const hour = new Date(item.dateTime).getHours();
     if (!hourlyData[hour]) hourlyData[hour] = [];

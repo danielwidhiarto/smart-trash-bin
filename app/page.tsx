@@ -87,7 +87,9 @@ export default function Home() {
     return null;
   };
 
+  // Filter out "LID OPEN" status from charts for cleaner visualization
   const chartData = history
+    .filter((item) => item.status !== "LID OPEN")
     .slice(0, 30)
     .reverse()
     .map((item, index) => ({
