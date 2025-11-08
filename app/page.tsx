@@ -7,6 +7,7 @@ import {
   TrashData,
   HistoryData,
 } from "@/lib/firebase";
+import { checkAndSendEmailNotification } from "@/lib/emailNotification";
 import {
   Trash2,
   Thermometer,
@@ -35,19 +36,38 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [showAlert, setShowAlert] = useState(false);
   const [prevStatus, setPrevStatus] = useState<string | null>(null);
+  const [prevFillPercent, setPrevFillPercent] = useState(0);
+
+  // TODO: Ganti dengan email user yang sebenarnya
+  const RECIPIENT_EMAIL =
+    process.env.NEXT_PUBLIC_NOTIFICATION_EMAIL || "user@example.com";
 
   useEffect(() => {
     const unsubscribeCurrent = getCurrentData((newData) => {
       setData(newData);
       setLoading(false);
 
-      // Show alert when status changes to FULL or HIGH
+      // Send email notification when trash goes from below 85% to above 85%
+      if (newData?.fillPercent) {
+        checkAndSendEmailNotification(
+          newData.fillPercent,
+          prevFillPercent,
+          RECIPIENT_EMAIL,
+          newData.temperature,
+          newData.humidity
+        );
+        setPrevFillPercent(newData.fillPercent);
+      }
+
+      // Show alert when trash reaches 70% or more
+      if (newData?.fillPercent && newData.fillPercent >= 70 && !showAlert) {
+        setShowAlert(true);
+        // Auto hide after 10 seconds
+        setTimeout(() => setShowAlert(false), 10000);
+      }
+
+      // Update status for other uses
       if (newData?.status && prevStatus !== newData.status) {
-        if (newData.status === "FULL" || newData.status === "HIGH") {
-          setShowAlert(true);
-          // Auto hide after 10 seconds
-          setTimeout(() => setShowAlert(false), 10000);
-        }
         setPrevStatus(newData.status);
       }
     });
@@ -60,7 +80,7 @@ export default function Home() {
       unsubscribeCurrent();
       unsubscribeHistory();
     };
-  }, [prevStatus]);
+  }, [prevStatus, prevFillPercent, RECIPIENT_EMAIL, showAlert]);
 
   if (loading) {
     return (
